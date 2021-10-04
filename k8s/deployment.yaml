@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdlbot-deployment
+  labels:
+    app: sdlbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sdlbot
+  template:
+    metadata:
+      labels:
+        app: sdlbot
+    spec:
+      containers:
+      - name: sdlbot
+        image: mgalgs/sdlbot:latest
+        imagePullPolicy: Always
+        command: ["python"]
+        args: ["/usr/src/app/main.py"]
+        env:
+        - name: "CLIENT_ID"
+          valueFrom:
+            secretKeyRef:
+              name: "sdlbot-secrets"
+              key: "CLIENT_ID"
+        - name: "CLIENT_SECRET"
+          valueFrom:
+            secretKeyRef:
+              name: "sdlbot-secrets"
+              key: "CLIENT_SECRET"
+        - name: "REDDIT_USERNAME"
+          valueFrom:
+            secretKeyRef:
+              name: "sdlbot-secrets"
+              key: "REDDIT_USERNAME"
+        - name: "REDDIT_PASSWORD"
+          valueFrom:
+            secretKeyRef:
+              name: "sdlbot-secrets"
+              key: "REDDIT_PASSWORD"
+        - name: "PROD"
+          value: "yes"
