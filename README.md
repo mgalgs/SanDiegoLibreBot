@@ -28,6 +28,17 @@ Then every time you want to work on the bot:
 source enter.sh
 ```
 
+To run the bot against `r/SanDiegoLibreTest`:
+
+```
+python src/main.py
+```
+
+To run it against `r/SanDiegoLibre`:
+
+```
+PROD=yes python src/main.py
+```
 
 ## Kubernetes setup (unused!)
 
