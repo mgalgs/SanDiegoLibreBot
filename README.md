@@ -28,9 +28,12 @@ Then every time you want to work on the bot:
 source enter.sh
 ```
 
-## Kubernetes setup
 
-This bot is deployed on a kubernetes cluster.
+## Kubernetes setup (unused!)
+
+This bot is currently running on my local machine :grimacing: but may also
+be deployed on a kubernetes cluster for high availability in the
+future. (TODO: add a persistent volume to house our "database")
 
 ### Configuration (secrets)
 
