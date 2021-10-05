@@ -68,8 +68,13 @@ def main():
             msg = f"[{action}] {post.subreddit_name_prefixed} u/{post.author.name} - {post.permalink}"
             logger.info(msg)
             if not already_seen:
-                post.crosspost(subreddit=target_sub)
-                seendb.add(post.fullname)
+                try:
+                    post.crosspost(subreddit=target_sub)
+                except praw.exceptions.RedditAPIException as e:
+                    logger.error(f"Failed to post {post.fullname}: {e}")
+                    continue
+                finally:
+                    seendb.add(post.fullname)
                 nposted += 1
                 time.sleep(fifteen_minutes)
             if nposted == 4:
