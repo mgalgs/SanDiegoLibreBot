@@ -21,10 +21,6 @@ class SeenDB:
             self._seen = set([l.strip() for l in f.readlines()])
 
     def add(self, fullname):
-        """
-        Returns False if this fullname has already been seen, otherwise inserts
-        it into the database and returns True.
-        """
         self._seen.add(fullname)
         with open(self._db_path, 'a') as f:
             f.write(f"{fullname}\n")
@@ -34,7 +30,7 @@ class SeenDB:
 
 
 def main():
-    """Main"""
+    """Main - duh!"""
     reddit = praw.Reddit(
         client_id=os.getenv('CLIENT_ID'),
         client_secret=os.getenv('CLIENT_SECRET'),
