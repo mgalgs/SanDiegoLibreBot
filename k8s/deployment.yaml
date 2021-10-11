@@ -1,3 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sdlbot-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: do-block-storage
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,13 +26,22 @@ spec:
       labels:
         app: sdlbot
     spec:
+      volumes:
+      - name: storage-volume
+        persistentVolumeClaim:
+          claimName: sdlbot-pvc
       containers:
       - name: sdlbot
         image: mgalgs/sdlbot:latest
         imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: "/data"
+          name: storage-volume
         command: ["python"]
         args: ["/usr/src/app/main.py"]
         env:
+        - name: "STORAGE_DIR"
+          value: "/data"
         - name: "CLIENT_ID"
           valueFrom:
             secretKeyRef:
