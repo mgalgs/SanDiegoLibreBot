@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import logging
 import pathlib
@@ -29,6 +30,18 @@ class SeenDB:
         return fullname in self._seen
 
 
+def get_db_path():
+    storage_dir = os.getenv('STORAGE_DIR')
+    if storage_dir is not None:
+        dbdir = pathlib.Path(storage_dir)
+        if not dbdir.exists():
+            logger.error("Storage directory does not exist: %s", storage_dir)
+            sys.exit(1)
+    else:
+        dbdir = pathlib.Path(__file__).parent.resolve()
+    return dbdir / 'seen.txt'
+
+
 def main():
     """Main - duh!"""
     reddit = praw.Reddit(
@@ -41,8 +54,9 @@ def main():
 
     subs = ["SanDiego", "SanDiegan"]
     target_sub = "SanDiegoLibre" if IS_PROD else "SanDiegoLibreTest"
-    dbpath = pathlib.Path(__file__).parent.resolve() / 'seen.txt'
-    seendb = SeenDB(dbpath)
+    dbpath = get_db_path()
+    logger.info("Using database at %s", dbpath)
+    seendb = SeenDB(get_db_path())
     fifteen_minutes = 60 * 15
 
     # Grab the .hot() posts each hour and cross-post them at 15 minute
