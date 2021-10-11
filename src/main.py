@@ -9,7 +9,7 @@ import praw
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-IS_PROD = os.getenv("PROD")
+IS_PROD = os.getenv("PROD") == "yes"
 
 
 class SeenDB:
