@@ -40,11 +40,10 @@ To run it against `r/SanDiegoLibre`:
 PROD=yes python src/main.py
 ```
 
-## Kubernetes setup (unused!)
+## Kubernetes setup
 
-This bot is currently running on my local machine :grimacing: but may also
-be deployed on a kubernetes cluster for high availability in the
-future. (TODO: add a persistent volume to house our "database")
+This bot is currently running on a kubernetes cluster for
+high-availability.
 
 ### Configuration (secrets)
 
