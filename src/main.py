@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import logging
 import pathlib
 
@@ -42,59 +41,66 @@ def get_db_path():
     return dbdir / 'seen.txt'
 
 
-def main():
-    """Main - duh!"""
-    reddit = praw.Reddit(
-        client_id=os.getenv('CLIENT_ID'),
-        client_secret=os.getenv('CLIENT_SECRET'),
-        user_agent='linux:SanDiegoLibreBot:v1.0 (by u/mitch_feaster)',
-        username=os.getenv('REDDIT_USERNAME'),
-        password=os.getenv('REDDIT_PASSWORD'),
-    )
+class Poster:
+    def __init__(self):
+        self.reddit = praw.Reddit(
+            client_id=os.getenv('CLIENT_ID'),
+            client_secret=os.getenv('CLIENT_SECRET'),
+            user_agent='linux:SanDiegoLibreBot:v1.0 (by u/mitch_feaster)',
+            username=os.getenv('REDDIT_USERNAME'),
+            password=os.getenv('REDDIT_PASSWORD'),
+        )
 
-    subs = ["SanDiego", "SanDiegan"]
-    target_sub = "SanDiegoLibre" if IS_PROD else "SanDiegoLibreTest"
-    dbpath = get_db_path()
-    logger.info("Using database at %s", dbpath)
-    seendb = SeenDB(get_db_path())
-    fifteen_minutes = 60 * 15
+        self.subs = ["SanDiego", "SanDiegan"]
+        self.target_sub = "SanDiegoLibre" if IS_PROD else "SanDiegoLibreTest"
+        dbpath = get_db_path()
+        logger.info("Using database at %s", dbpath)
+        self.seendb = SeenDB(dbpath)
 
-    # Grab the .hot() posts each hour and cross-post them at 15 minute
-    # intervals. The 15 minute interval crap is due to rate-limiting and
-    # can hopefully be tuned more aggressively in the future.
-    while True:
+    def post_some(self, num_to_post):
+        logger.info(f"Num to post: {num_to_post}")
+        if num_to_post < 1:
+            return
+        hot_posts = self.reddit.subreddit('+'.join(self.subs)).hot(limit=20)
         nposted = 0
-        # grabbing 20 (instead of 4, which is the most we can post each
-        # hour) since we'll be skipping posts that have already been seen.
-        hot_posts = reddit.subreddit('+'.join(subs)).hot(limit=20)
         for post in hot_posts:
             if not IS_PROD:
                 # test sub can't accept video uploads
-                if reddit.submission(post.fullname.split('_')[1]).is_video:
+                if self.reddit.submission(post.fullname.split('_')[1]).is_video:
                     logger.warning(f"Skipping {post.fullname} since our test sub can't take vids")
                     continue
-            already_seen = seendb.have(post.fullname)
+            already_seen = self.seendb.have(post.fullname)
             action = "SKIP" if already_seen else "X-POST"
             msg = f"[{action}] {post.subreddit_name_prefixed} u/{post.author.name} - {post.permalink}"
             logger.info(msg)
             if not already_seen:
                 try:
-                    post.crosspost(subreddit=target_sub)
+                    post.crosspost(subreddit=self.target_sub)
+                    nposted += 1
+                    if nposted == num_to_post:
+                        break
                 except praw.exceptions.RedditAPIException as e:
                     logger.error(f"Failed to post {post.fullname}: {e}")
                     continue
                 finally:
-                    seendb.add(post.fullname)
-                nposted += 1
-                time.sleep(fifteen_minutes)
-            if nposted == 4:
-                break
-        # Make sure we sleep through all 4 fifteen minute post slots if we
-        # didn't use all 4 slots above.
-        moresleep = (4 - nposted) * fifteen_minutes
-        if moresleep > 0:
-            logger.info(f"Need to sleep for {moresleep} more seconds because we cruised through everything")
-            time.sleep(moresleep)
+                    self.seendb.add(post.fullname)
+
+
+def usage():
+    print(f"Usage: {os.path.basename(sys.argv[0])} num-to-post")
+
+
+def main():
+    if len(sys.argv) != 2:
+        usage()
+        sys.exit(1)
+
+    try:
+        num_to_post = int(sys.argv[1])
+    except ValueError:
+        usage()
+        sys.exit(1)
+    Poster().post_some(num_to_post)
 
 
 if __name__ == "__main__":
