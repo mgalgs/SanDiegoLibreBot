@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sdlbot-cron
+  labels:
+    app: sdlbot
+spec:
+  schedule: "0 17 * * *"         # daily at 9 AM
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: sdlbot
+        spec:
+          restartPolicy: Never
+          volumes:
+          - name: storage-volume
+            persistentVolumeClaim:
+              claimName: sdlbot-pvc
+          containers:
+          - name: sdlbot
+            image: mgalgs/sdlbot:latest
+            imagePullPolicy: Always
+            volumeMounts:
+            - mountPath: "/data"
+              name: storage-volume
+            command: ["python"]
+            args: ["/usr/src/app/main.py", "1"]
+            env:
+            - name: "STORAGE_DIR"
+              value: "/data"
+            - name: "CLIENT_ID"
+              valueFrom:
+                secretKeyRef:
+                  name: "sdlbot-secrets"
+                  key: "CLIENT_ID"
+            - name: "CLIENT_SECRET"
+              valueFrom:
+                secretKeyRef:
+                  name: "sdlbot-secrets"
+                  key: "CLIENT_SECRET"
+            - name: "REDDIT_USERNAME"
+              valueFrom:
+                secretKeyRef:
+                  name: "sdlbot-secrets"
+                  key: "REDDIT_USERNAME"
+            - name: "REDDIT_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "sdlbot-secrets"
+                  key: "REDDIT_PASSWORD"
+            - name: "PROD"
+              value: "yes"
