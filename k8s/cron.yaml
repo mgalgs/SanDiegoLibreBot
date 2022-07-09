@@ -5,7 +5,7 @@ metadata:
   labels:
     app: sdlbot
 spec:
-  schedule: "0 17 * * *"         # daily at 9 AM
+  schedule: "0 16,20,00,04 * * *"         # daily at 8AM, 12PM, 4PM, 8PM
   jobTemplate:
     spec:
       template:
